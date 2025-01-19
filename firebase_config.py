@@ -6,13 +6,13 @@ import os
 load_dotenv()
 
 config = {
-    "apiKey": os.getenv('FIREBASE_API_KEY'),
-    "authDomain": os.getenv('FIREBASE_AUTH_DOMAIN'),
-    "projectId": os.getenv('FIREBASE_PROJECT_ID'),
-    "storageBucket": os.getenv('FIREBASE_STORAGE_BUCKET'),
-    "messagingSenderId": os.getenv('FIREBASE_MESSAGING_SENDER_ID'),
-    "appId": os.getenv('FIREBASE_APP_ID'),
-    "databaseURL": os.getenv('FIREBASE_BATABASE_URL')
+    "apiKey": "AIzaSyAFe3t7G7xEUUggL2xy4yufhRcnVUojskA",
+    "authDomain": "sand-task-4q9bty.firebaseapp.com",
+    "databaseURL": "https://sand-task-4q9bty-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "projectId": "sand-task-4q9bty",
+    "storageBucket": "sand-task-4q9bty.appspot.com",
+    "messagingSenderId": "413074085567",
+    "appId": "1:413074085567:web:39eb6757dccd37047d180a"
 }
 
 firebase = pyrebase.initialize_app(config)
