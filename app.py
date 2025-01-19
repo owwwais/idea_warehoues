@@ -27,6 +27,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ideas.db'
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 app.config['AVATAR_FOLDER'] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/avatars')
 app.config['GEMINI_API_KEY'] = 'AIzaSyDN9gBMT823PMvxDIxjvdHG8ouGAjZTH3w'
+app.config['WTF_CSRF_ENABLED'] = False  # تعطيل CSRF protection مؤقتاً
 
 # Initialize extensions
 db = SQLAlchemy(app)
@@ -199,21 +200,31 @@ def select_warehouse():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        
         try:
+            # التحقق من وجود البيانات المطلوبة
+            email = request.form.get('email')
+            password = request.form.get('password')
+            
+            if not email or not password:
+                flash('يرجى إدخال البريد الإلكتروني وكلمة المرور', 'danger')
+                return redirect(url_for('login'))
+
+            app.logger.info(f'محاولة تسجيل الدخول للمستخدم: {email}')
+            
             # المصادقة مع Firebase
             firebase_user = auth.sign_in_with_email_and_password(email, password)
+            app.logger.info('تم المصادقة بنجاح مع Firebase')
             
             # تخزين معلومات المستخدم في الجلسة
             session['user_id'] = firebase_user['localId']
             session['email'] = email
             session['firebase_token'] = firebase_user['idToken']
+            app.logger.info('تم تخزين معلومات المستخدم في الجلسة')
             
             # تحقق من وجود المستخدم في قاعدة البيانات المحلية
             user = User.query.filter_by(firebase_uid=firebase_user['localId']).first()
             if not user:
+                app.logger.info('إنشاء مستخدم جديد في قاعدة البيانات المحلية')
                 user = User(
                     email=email,
                     name=email.split('@')[0],
@@ -227,7 +238,13 @@ def login():
             
         except Exception as e:
             app.logger.error(f'خطأ في تسجيل الدخول: {str(e)}')
-            flash(f'خطأ في تسجيل الدخول: {str(e)}', 'danger')
+            if 'INVALID_PASSWORD' in str(e):
+                flash('كلمة المرور غير صحيحة', 'danger')
+            elif 'EMAIL_NOT_FOUND' in str(e):
+                flash('البريد الإلكتروني غير مسجل', 'danger')
+            else:
+                flash(f'خطأ في تسجيل الدخول: {str(e)}', 'danger')
+            return redirect(url_for('login'))
     
     return render_template('login.html')
 
