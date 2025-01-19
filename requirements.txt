@@ -8,3 +8,4 @@ firebase-admin==6.2.0
 pyrebase4==4.7.1
 gunicorn==21.2.0
 google-generativeai
+Pillow==10.2.0
