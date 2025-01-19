@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>إنشاء مستودع جديد</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('select_warehouse') }}">
+                        <input type="hidden" name="action" value="create">
+                        <div class="form-group">
+                            <label for="name">اسم المستودع</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="description">وصف المستودع</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-3">إنشاء مستودع</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>الانضمام إلى مستودع</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('select_warehouse') }}">
+                        <input type="hidden" name="action" value="join">
+                        <div class="form-group">
+                            <label for="code">كود المستودع</label>
+                            <input type="text" class="form-control" id="code" name="code" required>
+                            <small class="form-text text-muted">اطلب الكود من صاحب المستودع</small>
+                        </div>
+                        <button type="submit" class="btn btn-success mt-3">انضمام</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if code %}
+    <div class="alert alert-success mt-4">
+        <strong>كود المستودع:</strong> {{ code }}
+        <button class="btn btn-secondary btn-sm float-end" onclick="copyToClipboard('{{ code }}')">نسخ</button>
+    </div>
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            alert('تم نسخ الكود إلى الحافظة!');
+        }
+    </script>
+    {% endif %}
+</div>
+{% endblock %}

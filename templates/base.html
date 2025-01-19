@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="منصة إبداعية لمشاركة وتطوير الأفكار المبتكرة">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="مستودع الأفكار">
+    <meta name="apple-mobile-web-app-title" content="مستودع الأفكار">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="msapplication-TileColor" content="#2563eb">
+    <meta name="msapplication-tap-highlight" content="no">
+    <title>مستودع الأفكار</title>
+    <!-- Bootstrap RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts - Tajawal -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #3b82f6;
+            --accent-color: #60a5fa;
+            --background-color: #f8fafc;
+            --text-color: #1e293b;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        
+        /* Modern Navbar */
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color) !important;
+        }
+        
+        .nav-link {
+            font-weight: 500;
+            color: var(--text-color) !important;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: var(--background-color);
+            color: var(--primary-color) !important;
+        }
+        
+        /* Modern Cards */
+        .card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        /* Avatar Styles */
+        .avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-color);
+        }
+        
+        /* Modern Buttons */
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+        
+        /* Modern Alerts */
+        .alert {
+            border: none;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: right;
+        }
+        
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.5rem 0;
+            }
+            
+            .navbar-brand {
+                font-size: 1.25rem;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+        }
+        
+        /* Bottom Navigation for Mobile */
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+            padding: 0.5rem;
+            z-index: 1000;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-nav {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+            }
+            
+            .mobile-nav-item {
+                text-align: center;
+                color: var(--text-color);
+                text-decoration: none;
+                font-size: 0.8rem;
+            }
+            
+            .mobile-nav-item i {
+                font-size: 1.25rem;
+                display: block;
+                margin-bottom: 0.25rem;
+            }
+            
+            .mobile-nav-item.active {
+                color: var(--primary-color);
+            }
+            
+            /* Add padding to main content to prevent overlap with bottom nav */
+            body {
+                padding-bottom: 4rem;
+            }
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 3px solid var(--background-color);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <!-- Add these lines after the existing meta tags -->
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
+    
+    <!-- Add this before closing </head> -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/static/js/sw.js', {
+                        scope: '/'
+                    });
+                    console.log('ServiceWorker registered:', registration);
+                    
+                    // Add install prompt
+                    let deferredPrompt;
+                    window.addEventListener('beforeinstallprompt', (e) => {
+                        e.preventDefault();
+                        deferredPrompt = e;
+                        // يمكنك هنا إظهار زر التثبيت الخاص بك
+                        const installButton = document.getElementById('installPWA');
+                        if (installButton) {
+                            installButton.style.display = 'block';
+                            installButton.addEventListener('click', async () => {
+                                if (deferredPrompt) {
+                                    deferredPrompt.prompt();
+                                    const { outcome } = await deferredPrompt.userChoice;
+                                    console.log(`User response to the install prompt: ${outcome}`);
+                                    deferredPrompt = null;
+                                    installButton.style.display = 'none';
+                                }
+                            });
+                        }
+                    });
+                } catch (error) {
+                    console.error('ServiceWorker registration failed:', error);
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <!-- Desktop Navigation -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-lightbulb me-2"></i>مستودع الأفكار
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <button id="installPWA" class="btn btn-outline-primary d-none">
+                            <i class="fas fa-download me-2"></i>تثبيت التطبيق
+                        </button>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('create_idea') }}">
+                                <i class="fas fa-plus"></i> فكرة جديدة
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <img src="{{ current_user.get_avatar_url() }}" alt="Avatar" class="avatar-small me-2">
+                                <span class="d-none d-md-inline">{{ current_user.name or current_user.email }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                                        <i class="fas fa-user"></i> الملف الشخصي
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ url_for('logout') }}">
+                                        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">تسجيل الدخول</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('register') }}">التسجيل</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Mobile Bottom Navigation -->
+    {% if current_user.is_authenticated %}
+    <nav class="mobile-nav d-md-none">
+        <a href="{{ url_for('index') }}" class="mobile-nav-item {{ 'active' if request.endpoint == 'index' }}">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="{{ url_for('create_idea') }}" class="mobile-nav-item {{ 'active' if request.endpoint == 'create_idea' }}">
+            <i class="fas fa-plus"></i>
+            <span>فكرة جديدة</span>
+        </a>
+        <a href="{{ url_for('profile') }}" class="mobile-nav-item {{ 'active' if request.endpoint == 'profile' }}">
+            <i class="fas fa-user"></i>
+            <span>الملف</span>
+        </a>
+    </nav>
+    {% endif %}
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Add loading animation when submitting forms
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function() {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> جاري التحميل...';
+                    submitBtn.disabled = true;
+                }
+            });
+        });
+        
+        // Smooth scroll to top
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>

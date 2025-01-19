@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">تعديل الفكرة</h2>
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <form method="POST" class="card shadow-sm">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">العنوان</label>
+                        <input type="text" class="form-control" id="title" name="title" value="{{ idea.title }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">الوصف</label>
+                        <textarea class="form-control" id="content" name="content" rows="5" required>{{ idea.content }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label">التصنيف</label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="Technology" {% if idea.category == 'Technology' %}selected{% endif %}>تقنية</option>
+                            <option value="Business" {% if idea.category == 'Business' %}selected{% endif %}>أعمال</option>
+                            <option value="Education" {% if idea.category == 'Education' %}selected{% endif %}>تعليم</option>
+                            <option value="Health" {% if idea.category == 'Health' %}selected{% endif %}>صحة</option>
+                            <option value="Environment" {% if idea.category == 'Environment' %}selected{% endif %}>بيئة</option>
+                            <option value="Social" {% if idea.category == 'Social' %}selected{% endif %}>اجتماعي</option>
+                            <option value="Other" {% if idea.category == 'Other' %}selected{% endif %}>أخرى</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="stage" class="form-label">مرحلة التطوير</label>
+                        <select class="form-select" id="stage" name="stage" required>
+                            <option value="draft" {% if idea.stage == 'draft' %}selected{% endif %}>مسودة</option>
+                            <option value="in_progress" {% if idea.stage == 'in_progress' %}selected{% endif %}>قيد التنفيذ</option>
+                            <option value="completed" {% if idea.stage == 'completed' %}selected{% endif %}>مكتملة</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="tags" class="form-label">الوسوم (مفصولة بفواصل)</label>
+                        <input type="text" class="form-control" id="tags" name="tags" 
+                               value="{{ idea.tags|map(attribute='name')|join(', ') }}">
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">حفظ التغييرات</button>
+                        <a href="{{ url_for('view_idea', idea_id=idea.id) }}" class="btn btn-secondary">إلغاء</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

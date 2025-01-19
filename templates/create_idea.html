@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Create New Idea</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.csrf_token }}
+        <div class="mb-3">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control") }}
+            {% if form.title.errors %}
+                {% for error in form.title.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            {{ form.content.label(class="form-label") }}
+            {{ form.content(class="form-control", rows="5") }}
+            {% if form.content.errors %}
+                {% for error in form.content.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            {{ form.category.label(class="form-label") }}
+            {{ form.category(class="form-select") }}
+            {% if form.category.errors %}
+                {% for error in form.category.errors %}
+                    <div class="text-danger">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="mb-3">
+            {{ form.tags.label(class="form-label") }}
+            {{ form.tags(class="form-control", placeholder="e.g., innovation, startup, AI") }}
+            <small class="text-muted">Separate tags with commas</small>
+        </div>
+        <div class="mb-3">
+            {{ form.attachments.label(class="form-label") }}
+            {{ form.attachments(class="form-control") }}
+            <small class="text-muted">You can select multiple files. Maximum size: 16MB per file.</small>
+        </div>
+        <div class="mb-3">
+            {{ form.stage.label(class="form-label") }}
+            {{ form.stage(class="form-select") }}
+        </div>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="ai_suggestions" name="ai_suggestions">
+            <label class="form-check-label" for="ai_suggestions">
+                Get AI suggestions for improvement
+            </label>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Idea</button>
+    </form>
+</div>
+
+<script>
+document.getElementById('content').addEventListener('input', function() {
+    if (document.getElementById('ai_suggestions').checked) {
+        // Debounce the API call
+        clearTimeout(this.timeout);
+        this.timeout = setTimeout(() => {
+            fetch('/get_ai_suggestions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    content: this.value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Show suggestions in a popover or adjacent div
+                console.log(data.suggestions);
+            });
+        }, 1000);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Search and Filters -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <input type="text" id="searchInput" class="form-control" placeholder="ابحث عن فكرة...">
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <select id="categoryFilter" class="form-select">
+                        <option value="">جميع التصنيفات</option>
+                        <option value="Technology">تقنية</option>
+                        <option value="Business">أعمال</option>
+                        <option value="Education">تعليم</option>
+                        <option value="Health">صحة</option>
+                        <option value="Environment">بيئة</option>
+                        <option value="Social">اجتماعي</option>
+                        <option value="Other">أخرى</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="stageFilter" class="form-select">
+                        <option value="">جميع المراحل</option>
+                        <option value="draft">مسودة</option>
+                        <option value="in_progress">قيد التنفيذ</option>
+                        <option value="completed">مكتمل</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ideas Grid -->
+    <div class="row" id="ideasGrid">
+        {% for idea in ideas %}
+        <div class="col-md-6 col-lg-4 mb-4 idea-card" 
+             data-category="{{ idea.category }}"
+             data-stage="{{ idea.stage }}">
+            <div class="card h-100 shadow-sm hover-shadow">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{{ idea.author.get_avatar_url() }}" alt="صورة المستخدم" 
+                             class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                        <div>
+                            <h6 class="mb-0">{{ idea.author.name or 'مستخدم' }}</h6>
+                            <small class="text-muted">{{ idea.created_at.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                    </div>
+                    
+                    <h5 class="card-title mb-3">
+                        <a href="{{ url_for('view_idea', idea_id=idea.id) }}" class="text-decoration-none text-dark">
+                            {{ idea.title }}
+                        </a>
+                    </h5>
+                    
+                    <p class="card-text text-muted">{{ idea.content[:150] }}...</p>
+                    
+                    <div class="mb-3">
+                        <span class="badge bg-primary me-1">{{ idea.category }}</span>
+                        <span class="badge bg-info me-1">{{ idea.stage }}</span>
+                        {% for tag in idea.tags %}
+                        <span class="badge bg-secondary me-1">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-comment text-muted"></i>
+                            <small class="text-muted ms-1">{{ idea.comments|length }}</small>
+                            {% if idea.attachments %}
+                            <i class="fas fa-paperclip text-muted ms-2"></i>
+                            <small class="text-muted ms-1">{{ idea.attachments|length }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Create Idea Button -->
+    <div class="position-fixed bottom-0 end-0 m-4">
+        <a href="{{ url_for('create_idea') }}" class="btn btn-primary btn-lg rounded-circle shadow">
+            <i class="fas fa-plus"></i>
+        </a>
+    </div>
+</div>
+
+<style>
+.hover-shadow {
+    transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.card {
+    border: none;
+    border-radius: 1rem;
+}
+
+.badge {
+    font-weight: 500;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const stageFilter = document.getElementById('stageFilter');
+    const ideasGrid = document.getElementById('ideasGrid');
+    
+    function filterIdeas() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedCategory = categoryFilter.value;
+        const selectedStage = stageFilter.value;
+        
+        const ideas = ideasGrid.getElementsByClassName('idea-card');
+        
+        Array.from(ideas).forEach(idea => {
+            const title = idea.querySelector('.card-title').textContent.toLowerCase();
+            const content = idea.querySelector('.card-text').textContent.toLowerCase();
+            const category = idea.dataset.category;
+            const stage = idea.dataset.stage;
+            
+            const matchesSearch = title.includes(searchTerm) || content.includes(searchTerm);
+            const matchesCategory = !selectedCategory || category === selectedCategory;
+            const matchesStage = !selectedStage || stage === selectedStage;
+            
+            if (matchesSearch && matchesCategory && matchesStage) {
+                idea.style.display = '';
+            } else {
+                idea.style.display = 'none';
+            }
+        });
+    }
+    
+    searchInput.addEventListener('input', filterIdeas);
+    categoryFilter.addEventListener('change', filterIdeas);
+    stageFilter.addEventListener('change', filterIdeas);
+});
+</script>
+{% endblock %}

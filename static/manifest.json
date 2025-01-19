@@ -1,0 +1,29 @@
+{
+  "name": "مستودع الأفكار",
+  "short_name": "الأفكار",
+  "description": "منصة إبداعية لمشاركة وتطوير الأفكار المبتكرة",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "categories": ["productivity", "social"],
+  "dir": "rtl",
+  "lang": "ar",
+  "prefer_related_applications": false,
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/static/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+} 

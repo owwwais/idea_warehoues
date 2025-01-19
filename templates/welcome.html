@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="welcome-section py-5">
+    <div class="container">
+        <!-- Hero Section -->
+        <div class="row align-items-center mb-5">
+            <div class="col-lg-6 text-center text-lg-end">
+                <h1 class="display-4 fw-bold mb-4">مرحباً بك في مستودع الأفكار</h1>
+                <p class="lead mb-4">منصة إبداعية لمشاركة وتطوير الأفكار المبتكرة مع مجتمع من المبدعين</p>
+                <div class="d-grid gap-3 d-sm-flex justify-content-sm-end">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 gap-3">
+                        ابدأ الآن مجاناً
+                    </a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg px-4">
+                        تسجيل الدخول
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <img src="{{ url_for('static', filename='images/hero-illustration.svg') }}" alt="Hero Illustration" class="img-fluid">
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="row g-4 py-5">
+            <div class="col-md-4">
+                <div class="card h-100 feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-lightbulb fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="card-title h4 mb-3">شارك أفكارك</h3>
+                        <p class="card-text">اطرح أفكارك وابتكاراتك مع مجتمع من المبدعين واحصل على تعليقات قيمة</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-comments fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="card-title h4 mb-3">تفاعل وناقش</h3>
+                        <p class="card-text">شارك في النقاشات وساهم في تطوير الأفكار مع مجتمع متنوع من المبدعين</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 feature-card">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="fas fa-rocket fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="card-title h4 mb-3">طور مشاريعك</h3>
+                        <p class="card-text">حول أفكارك إلى مشاريع حقيقية واحصل على الدعم من المجتمع</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="row text-center py-5">
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="stat-card p-4 rounded-3 bg-white shadow-sm">
+                    <h2 class="display-4 fw-bold text-primary">+1000</h2>
+                    <p class="lead mb-0">فكرة مشتركة</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4 mb-md-0">
+                <div class="stat-card p-4 rounded-3 bg-white shadow-sm">
+                    <h2 class="display-4 fw-bold text-primary">+500</h2>
+                    <p class="lead mb-0">مستخدم نشط</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card p-4 rounded-3 bg-white shadow-sm">
+                    <h2 class="display-4 fw-bold text-primary">+2000</h2>
+                    <p class="lead mb-0">تعليق وتفاعل</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="text-center py-5">
+            <h2 class="display-6 fw-bold mb-4">انضم إلى مجتمعنا اليوم</h2>
+            <p class="lead mb-4">كن جزءاً من مجتمع المبدعين وشارك في صنع المستقبل</p>
+            <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5 py-3">
+                سجل الآن مجاناً
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .welcome-section {
+        background: linear-gradient(135deg, var(--background-color) 0%, #ffffff 100%);
+    }
+    
+    .feature-card {
+        border: none;
+        border-radius: 1rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .feature-icon {
+        background: rgba(37, 99, 235, 0.1);
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+    
+    .stat-card {
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    @media (max-width: 768px) {
+        .display-4 {
+            font-size: 2.5rem;
+        }
+        
+        .lead {
+            font-size: 1.1rem;
+        }
+        
+        .feature-card {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}

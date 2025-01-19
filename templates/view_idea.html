@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title text-center mb-4">{{ idea.title }}</h2>
+            
+            <!-- Author and Date -->
+            <div class="d-flex justify-content-between mb-3">
+                <span class="text-muted">
+                    <i class="fas fa-user"></i> {{ idea.author.name }}
+                </span>
+                <span class="text-muted">
+                    <i class="fas fa-calendar"></i> {{ idea.created_at.strftime('%Y-%m-%d') }}
+                </span>
+            </div>
+
+            <!-- Category and Stage -->
+            <div class="d-flex justify-content-between mb-3">
+                <span class="badge bg-primary">{{ idea.category }}</span>
+                <span class="badge bg-info">{{ idea.stage }}</span>
+            </div>
+
+            <!-- Content -->
+            <p class="card-text">{{ idea.content }}</p>
+
+            <!-- Tags -->
+            <div class="mb-3">
+                {% for tag in idea.tags %}
+                <span class="badge bg-secondary me-1">{{ tag.name }}</span>
+                {% endfor %}
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between mb-3">
+                <div>
+                    {% if current_user.id == idea.author_id %}
+                    <form action="{{ url_for('delete_idea', idea_id=idea.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('هل أنت متأكد من حذف هذه الفكرة؟')">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>
+                    </form>
+                    <a href="{{ url_for('edit_idea', idea_id=idea.id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit"></i> تعديل
+                    </a>
+                    {% endif %}
+                </div>
+                <button class="btn btn-primary" onclick="getAISuggestions()">
+                    <i class="fas fa-robot"></i> استشارة الذكاء الاصطناعي
+                </button>
+            </div>
+
+            <!-- AI Suggestions Modal -->
+            <div class="modal fade" id="aiSuggestionsModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">اقتراحات الذكاء الاصطناعي</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" id="aiSuggestions">
+                            <!-- AI suggestions will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attachments -->
+            {% if idea.attachments %}
+            <div class="mb-3">
+                <h5>المرفقات:</h5>
+                <ul class="list-group">
+                    {% for attachment in idea.attachments %}
+                    <li class="list-group-item">
+                        <a href="{{ url_for('download_attachment', attachment_id=attachment.id) }}">
+                            {{ attachment.original_filename }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Comments Section -->
+            <div class="mt-4">
+                <h4>التعليقات</h4>
+                {% if current_user.is_authenticated %}
+                <form action="{{ url_for('add_comment', idea_id=idea.id) }}" method="POST" class="mb-3">
+                    <div class="mb-3">
+                        <textarea class="form-control" name="content" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">إضافة تعليق</button>
+                </form>
+                {% endif %}
+
+                <div class="comments-list">
+                    {% for comment in idea.comments %}
+                    <div class="card mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ comment.author.name }}</strong>
+                                <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d') }}</small>
+                            </div>
+                            <p class="mb-0">{{ comment.content }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function getAISuggestions() {
+    fetch('/idea/{{ idea.id }}/ai-assist', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('aiSuggestions').innerHTML = data.suggestions;
+        new bootstrap.Modal(document.getElementById('aiSuggestionsModal')).show();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء جلب الاقتراحات');
+    });
+}
+</script>
+{% endblock %}
