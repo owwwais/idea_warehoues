@@ -583,19 +583,37 @@ class IdeaForm(FlaskForm):
     attachments = FileField('Attachments')
 
 def init_db():
-    # Drop all tables
-    db.drop_all()
-    
-    # Create all tables
-    db.create_all()
-    
-    # Create default categories
-    categories = ['Technology', 'Business', 'Education', 'Health', 'Environment', 'Social', 'Other']
-    for category_name in categories:
-        category = Category(name=category_name)
-        db.session.add(category)
-    
-    db.session.commit()
+    """تهيئة قاعدة البيانات وإنشاء الجداول"""
+    try:
+        app.logger.info("بدء تهيئة قاعدة البيانات...")
+        
+        # حذف جميع الجداول إذا كانت موجودة
+        db.drop_all()
+        app.logger.info("تم حذف الجداول القديمة")
+        
+        # إنشاء جميع الجداول
+        db.create_all()
+        app.logger.info("تم إنشاء الجداول الجديدة")
+
+        # إنشاء الفئات الافتراضية
+        default_categories = [
+            'technology', 'business', 'education', 
+            'health', 'environment', 'social', 'other'
+        ]
+        
+        for category_name in default_categories:
+            category = Category.query.filter_by(name=category_name).first()
+            if not category:
+                category = Category(name=category_name)
+                db.session.add(category)
+        
+        db.session.commit()
+        app.logger.info("تم إنشاء الفئات الافتراضية")
+        
+        app.logger.info("تم تهيئة قاعدة البيانات بنجاح")
+    except Exception as e:
+        app.logger.error(f"خطأ في تهيئة قاعدة البيانات: {str(e)}")
+        raise
 
 def create_default_icons():
     icons_path = os.path.join(app.static_folder, 'icons')
