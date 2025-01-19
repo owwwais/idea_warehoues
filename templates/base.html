@@ -11,6 +11,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="msapplication-TileColor" content="#2563eb">
     <meta name="msapplication-tap-highlight" content="no">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
     <title>مستودع الأفكار</title>
     <!-- Bootstrap RTL CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
@@ -192,11 +195,6 @@
             100% { transform: rotate(360deg); }
         }
     </style>
-    <!-- Add these lines after the existing meta tags -->
-    <meta name="theme-color" content="#2563eb">
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}">
-    
     <!-- Add this before closing </head> -->
     <script>
         if ('serviceWorker' in navigator) {
@@ -251,7 +249,7 @@
                             <i class="fas fa-download me-2"></i>تثبيت التطبيق
                         </button>
                     </li>
-                    {% if current_user.is_authenticated %}
+                    {% if is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('create_idea') }}">
                                 <i class="fas fa-plus"></i> فكرة جديدة
@@ -260,7 +258,7 @@
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav">
-                    {% if current_user.is_authenticated %}
+                    {% if is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
                                 <img src="{{ current_user.get_avatar_url() }}" alt="Avatar" class="avatar-small me-2">
@@ -311,7 +309,7 @@
     {% block content %}{% endblock %}
 
     <!-- Mobile Bottom Navigation -->
-    {% if current_user.is_authenticated %}
+    {% if is_authenticated %}
     <nav class="mobile-nav d-md-none">
         <a href="{{ url_for('index') }}" class="mobile-nav-item {{ 'active' if request.endpoint == 'index' }}">
             <i class="fas fa-home"></i>

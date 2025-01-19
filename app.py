@@ -111,6 +111,20 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
 
+# إضافة context processor لتوفير معلومات المستخدم للقوالب
+@app.context_processor
+def inject_user():
+    if 'user_id' in session:
+        user = User.query.filter_by(firebase_uid=session['user_id']).first()
+        return {
+            'is_authenticated': True,
+            'current_user': user
+        }
+    return {
+        'is_authenticated': False,
+        'current_user': None
+    }
+
 @app.route('/')
 def index():
     if 'user_id' not in session:
