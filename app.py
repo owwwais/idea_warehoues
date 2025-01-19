@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, send_from_directory, abort, make_response
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from datetime import datetime
 import os
 from firebase_config import auth
@@ -27,8 +26,6 @@ app.config['GEMINI_API_KEY'] = 'AIzaSyDN9gBMT823PMvxDIxjvdHG8ouGAjZTH3w'
 
 # Initialize extensions
 db = SQLAlchemy(app)
-login_manager = LoginManager(app)
-login_manager.login_view = 'login'
 
 # Create upload folders if they don't exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -46,13 +43,11 @@ class Warehouse(db.Model):
     users = db.relationship('User', backref='warehouse', lazy=True)
     ideas = db.relationship('Idea', backref='warehouse', lazy=True)
 
-class User(UserMixin, db.Model):
+class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    firebase_uid = db.Column(db.String(128), unique=True, nullable=False)
-    avatar = db.Column(db.String(255))
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'))
     ideas = db.relationship('Idea', backref='author', lazy=True)
     comments = db.relationship('Comment', backref='author', lazy=True)
@@ -110,25 +105,23 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), unique=True, nullable=False)
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
 @app.route('/')
 def index():
-    if not current_user.is_authenticated:
+    if 'user_id' not in session:
         return render_template('welcome.html')
     
-    if not current_user.warehouse_id:
+    if not User.query.filter_by(email=session['email']).first().warehouse_id:
         return redirect(url_for('select_warehouse'))
         
-    ideas = Idea.query.filter_by(warehouse_id=current_user.warehouse_id).order_by(Idea.created_at.desc()).all()
+    ideas = Idea.query.filter_by(warehouse_id=User.query.filter_by(email=session['email']).first().warehouse_id).order_by(Idea.created_at.desc()).all()
     return render_template('index.html', ideas=ideas)
 
 @app.route('/select-warehouse', methods=['GET', 'POST'])
-@login_required
 def select_warehouse():
-    if current_user.warehouse_id:
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
+    if User.query.filter_by(email=session['email']).first().warehouse_id:
         return redirect(url_for('index'))
         
     if request.method == 'POST':
@@ -150,7 +143,8 @@ def select_warehouse():
                 db.session.add(warehouse)
                 db.session.commit()
                 
-                current_user.warehouse_id = warehouse.id
+                user = User.query.filter_by(email=session['email']).first()
+                user.warehouse_id = warehouse.id
                 db.session.commit()
                 
                 flash('تم إنشاء المستودع بنجاح! كود المستودع: {}'.format(code), 'success')
@@ -161,7 +155,8 @@ def select_warehouse():
             warehouse = Warehouse.query.filter_by(code=code).first()
             
             if warehouse:
-                current_user.warehouse_id = warehouse.id
+                user = User.query.filter_by(email=session['email']).first()
+                user.warehouse_id = warehouse.id
                 db.session.commit()
                 flash('تم الانضمام إلى المستودع بنجاح!', 'success')
                 return redirect(url_for('index'))
@@ -169,6 +164,30 @@ def select_warehouse():
                 flash('كود المستودع غير صحيح', 'danger')
     
     return render_template('select_warehouse.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        try:
+            # المصادقة مع Firebase فقط
+            firebase_user = auth.sign_in_with_email_and_password(email, password)
+            
+            # تخزين معرف المستخدم وتوكن المصادقة في الجلسة
+            session['user_id'] = firebase_user['localId']
+            session['firebase_token'] = firebase_user['idToken']
+            session['email'] = email
+            
+            flash('تم تسجيل الدخول بنجاح!', 'success')
+            return redirect(url_for('select_warehouse'))
+            
+        except Exception as e:
+            flash(f'خطأ في تسجيل الدخول: {str(e)}', 'danger')
+            print(f"Firebase Error: {str(e)}")  # لتسجيل الخطأ في السجلات
+    
+    return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -187,73 +206,35 @@ def register():
             return redirect(url_for('register'))
         
         try:
-            # Create user in Firebase
+            # إنشاء المستخدم في Firebase فقط
             firebase_user = auth.create_user_with_email_and_password(email, password)
             
-            # Create user in local database
-            db_user = User(
-                email=email,
-                name=name,
-                firebase_uid=firebase_user['localId']
-            )
-            db.session.add(db_user)
-            db.session.commit()
+            # تسجيل الدخول مباشرة بعد التسجيل
+            session['user_id'] = firebase_user['localId']
+            session['firebase_token'] = firebase_user['idToken']
+            session['email'] = email
             
-            # Log in the user
-            login_user(db_user)
-            
-            flash('تم إنشاء حسابك بنجاح!', 'success')
+            flash('تم التسجيل بنجاح!', 'success')
             return redirect(url_for('select_warehouse'))
             
         except Exception as e:
-            flash('حدث خطأ أثناء التسجيل. الرجاء المحاولة مرة أخرى.', 'danger')
-            return redirect(url_for('register'))
-            
+            flash(f'خطأ في التسجيل: {str(e)}', 'danger')
+            print(f"Firebase Error: {str(e)}")  # لتسجيل الخطأ في السجلات
+    
     return render_template('register.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        
-        try:
-            # Authenticate with Firebase
-            firebase_user = auth.sign_in_with_email_and_password(email, password)
-            
-            # Get or create user in local database
-            user = User.query.filter_by(email=email).first()
-            
-            if not user:
-                # Create user in local database if they exist in Firebase but not in local DB
-                user = User(
-                    email=email,
-                    name=email.split('@')[0],  # Temporary name from email
-                    firebase_uid=firebase_user['localId']
-                )
-                db.session.add(user)
-                db.session.commit()
-            
-            login_user(user)
-            session['firebase_token'] = firebase_user['idToken']
-            flash('تم تسجيل الدخول بنجاح!', 'success')
-            return redirect(url_for('select_warehouse'))
-            
-        except Exception as e:
-            flash('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'danger')
-    
-    return render_template('login.html')
-
 @app.route('/logout')
-@login_required
 def logout():
-    logout_user()
-    flash('تم تسجيل الخروج بنجاح!', 'success')
-    return redirect(url_for('index'))
+    # مسح بيانات الجلسة
+    session.clear()
+    flash('تم تسجيل الخروج بنجاح', 'success')
+    return redirect(url_for('login'))
 
 @app.route('/profile', methods=['GET', 'POST'])
-@login_required
 def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
     if request.method == 'POST':
         if 'avatar' in request.files:
             file = request.files['avatar']
@@ -261,22 +242,26 @@ def profile():
                 filename = secure_filename(file.filename)
                 file_path = os.path.join(app.config['AVATAR_FOLDER'], filename)
                 file.save(file_path)
-                current_user.avatar = filename
+                user = User.query.filter_by(email=session['email']).first()
+                user.avatar = filename
                 db.session.commit()
                 flash('Avatar updated successfully!', 'success')
         
         name = request.form.get('name')
-        if name and name != current_user.name:
-            current_user.name = name
+        if name and name != User.query.filter_by(email=session['email']).first().name:
+            user = User.query.filter_by(email=session['email']).first()
+            user.name = name
             db.session.commit()
             flash('Profile updated successfully!', 'success')
             
     return render_template('profile.html')
 
 @app.route('/create_idea', methods=['GET', 'POST'])
-@login_required
 def create_idea():
-    if not current_user.warehouse_id:
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
+    if not User.query.filter_by(email=session['email']).first().warehouse_id:
         flash('يجب عليك الانضمام إلى مستودع أولاً', 'warning')
         return redirect(url_for('select_warehouse'))
         
@@ -287,8 +272,8 @@ def create_idea():
             content=form.content.data,
             category=form.category.data,
             stage=form.stage.data,
-            author_id=current_user.id,
-            warehouse_id=current_user.warehouse_id
+            author_id=User.query.filter_by(email=session['email']).first().id,
+            warehouse_id=User.query.filter_by(email=session['email']).first().warehouse_id
         )
         
         # Handle tags
@@ -326,20 +311,24 @@ def create_idea():
     return render_template('create_idea.html', form=form)
 
 @app.route('/idea/<int:idea_id>')
-@login_required
 def view_idea(idea_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
     idea = Idea.query.get_or_404(idea_id)
     
     # التحقق من أن المستخدم ينتمي إلى نفس المستودع
-    if idea.warehouse_id != current_user.warehouse_id:
+    if idea.warehouse_id != User.query.filter_by(email=session['email']).first().warehouse_id:
         flash('لا يمكنك الوصول إلى هذه الفكرة', 'danger')
         return redirect(url_for('index'))
         
     return render_template('view_idea.html', idea=idea)
 
 @app.route('/attachment/<int:attachment_id>')
-@login_required
 def download_attachment(attachment_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
     attachment = Attachment.query.get_or_404(attachment_id)
     
     # Check if the user has access to this attachment
@@ -362,8 +351,10 @@ def download_attachment(attachment_id):
     )
 
 @app.route('/idea/<int:idea_id>/attach', methods=['POST'])
-@login_required
 def attach_file(idea_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
     idea = Idea.query.get_or_404(idea_id)
     if 'file' not in request.files:
         flash('No file selected', 'error')
@@ -392,15 +383,17 @@ def attach_file(idea_id):
     return redirect(url_for('view_idea', idea_id=idea_id))
 
 @app.route('/idea/<int:idea_id>/comment', methods=['POST'])
-@login_required
 def add_comment(idea_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
     idea = Idea.query.get_or_404(idea_id)
     content = request.form.get('content')
     
     if content:
         comment = Comment(
             content=content,
-            author_id=current_user.id,
+            author_id=User.query.filter_by(email=session['email']).first().id,
             idea_id=idea_id
         )
         db.session.add(comment)
@@ -412,10 +405,12 @@ def add_comment(idea_id):
     return redirect(url_for('view_idea', idea_id=idea_id))
 
 @app.route('/idea/<int:idea_id>/delete', methods=['POST'])
-@login_required
 def delete_idea(idea_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
     idea = Idea.query.get_or_404(idea_id)
-    if idea.author_id != current_user.id:
+    if idea.author_id != User.query.filter_by(email=session['email']).first().id:
         flash('لا يمكنك حذف هذه الفكرة', 'danger')
         return redirect(url_for('view_idea', idea_id=idea_id))
     
@@ -425,10 +420,12 @@ def delete_idea(idea_id):
     return redirect(url_for('index'))
 
 @app.route('/idea/<int:idea_id>/edit', methods=['GET', 'POST'])
-@login_required
 def edit_idea(idea_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
     idea = Idea.query.get_or_404(idea_id)
-    if idea.author_id != current_user.id:
+    if idea.author_id != User.query.filter_by(email=session['email']).first().id:
         flash('لا يمكنك تعديل هذه الفكرة', 'danger')
         return redirect(url_for('view_idea', idea_id=idea_id))
     
@@ -459,8 +456,10 @@ def edit_idea(idea_id):
     return render_template('edit_idea.html', idea=idea)
 
 @app.route('/idea/<int:idea_id>/ai-assist', methods=['POST'])
-@login_required
 def ai_assist_idea(idea_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
     idea = Idea.query.get_or_404(idea_id)
     suggestions = get_ai_suggestions(idea.content)
     return jsonify({'suggestions': suggestions})
