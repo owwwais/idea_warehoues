@@ -15,6 +15,10 @@ import random
 import string
 import shutil
 from PIL import Image, ImageDraw
+import logging
+
+# تكوين تسجيل الأخطاء
+logging.basicConfig(level=logging.DEBUG)
 
 # Create the Flask application
 app = Flask(__name__)
@@ -48,6 +52,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    firebase_uid = db.Column(db.String(128), unique=True, nullable=False)
+    avatar = db.Column(db.String(255))
     warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouses.id'))
     ideas = db.relationship('Idea', backref='author', lazy=True)
     comments = db.relationship('Comment', backref='author', lazy=True)
@@ -110,10 +116,21 @@ def index():
     if 'user_id' not in session:
         return render_template('welcome.html')
     
-    if not User.query.filter_by(email=session['email']).first().warehouse_id:
+    # تحقق من وجود المستخدم في قاعدة البيانات المحلية
+    user = User.query.filter_by(firebase_uid=session['user_id']).first()
+    if not user:
+        user = User(
+            email=session['email'],
+            name=session['email'].split('@')[0],
+            firebase_uid=session['user_id']
+        )
+        db.session.add(user)
+        db.session.commit()
+    
+    if not user.warehouse_id:
         return redirect(url_for('select_warehouse'))
         
-    ideas = Idea.query.filter_by(warehouse_id=User.query.filter_by(email=session['email']).first().warehouse_id).order_by(Idea.created_at.desc()).all()
+    ideas = Idea.query.filter_by(warehouse_id=user.warehouse_id).order_by(Idea.created_at.desc()).all()
     return render_template('index.html', ideas=ideas)
 
 @app.route('/select-warehouse', methods=['GET', 'POST'])
@@ -172,20 +189,31 @@ def login():
         password = request.form.get('password')
         
         try:
-            # المصادقة مع Firebase فقط
+            # المصادقة مع Firebase
             firebase_user = auth.sign_in_with_email_and_password(email, password)
             
-            # تخزين معرف المستخدم وتوكن المصادقة في الجلسة
+            # تخزين معلومات المستخدم في الجلسة
             session['user_id'] = firebase_user['localId']
-            session['firebase_token'] = firebase_user['idToken']
             session['email'] = email
+            session['firebase_token'] = firebase_user['idToken']
+            
+            # تحقق من وجود المستخدم في قاعدة البيانات المحلية
+            user = User.query.filter_by(firebase_uid=firebase_user['localId']).first()
+            if not user:
+                user = User(
+                    email=email,
+                    name=email.split('@')[0],
+                    firebase_uid=firebase_user['localId']
+                )
+                db.session.add(user)
+                db.session.commit()
             
             flash('تم تسجيل الدخول بنجاح!', 'success')
-            return redirect(url_for('select_warehouse'))
+            return redirect(url_for('index'))
             
         except Exception as e:
+            app.logger.error(f'خطأ في تسجيل الدخول: {str(e)}')
             flash(f'خطأ في تسجيل الدخول: {str(e)}', 'danger')
-            print(f"Firebase Error: {str(e)}")  # لتسجيل الخطأ في السجلات
     
     return render_template('login.html')
 
@@ -206,20 +234,29 @@ def register():
             return redirect(url_for('register'))
         
         try:
-            # إنشاء المستخدم في Firebase فقط
+            # إنشاء المستخدم في Firebase
             firebase_user = auth.create_user_with_email_and_password(email, password)
             
-            # تسجيل الدخول مباشرة بعد التسجيل
+            # إنشاء المستخدم في قاعدة البيانات المحلية
+            user = User(
+                email=email,
+                name=name,
+                firebase_uid=firebase_user['localId']
+            )
+            db.session.add(user)
+            db.session.commit()
+            
+            # تسجيل الدخول مباشرة
             session['user_id'] = firebase_user['localId']
-            session['firebase_token'] = firebase_user['idToken']
             session['email'] = email
+            session['firebase_token'] = firebase_user['idToken']
             
             flash('تم التسجيل بنجاح!', 'success')
-            return redirect(url_for('select_warehouse'))
+            return redirect(url_for('index'))
             
         except Exception as e:
+            app.logger.error(f'خطأ في التسجيل: {str(e)}')
             flash(f'خطأ في التسجيل: {str(e)}', 'danger')
-            print(f"Firebase Error: {str(e)}")  # لتسجيل الخطأ في السجلات
     
     return render_template('register.html')
 
